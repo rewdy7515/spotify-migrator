@@ -1,0 +1,12 @@
+{
+  "name": "spotify-migrator",
+  "version": "1.0.0",
+  "description": "Spotify playlist, liked songs, albums, and artist migration tool",
+  "main": "index.js",
+  "scripts": {
+    "start": "node api/server.js"
+  },
+  "dependencies": {
+    "spotify-web-api-node": "^5.0.2"
+  }
+}
