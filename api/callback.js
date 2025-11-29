@@ -3,9 +3,8 @@ const { getSpotify } = require("./spotify");
 module.exports = async function handler(req, res) {
   const code = req.query.code;
 
-  const spotify = getSpotify();
-
   try {
+    const spotify = getSpotify();
     const tokenData = await spotify.authorizationCodeGrant(code);
 
     res.setHeader("Set-Cookie", [

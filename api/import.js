@@ -1,15 +1,16 @@
 const { getSpotify } = require("./spotify");
 
 module.exports = async function handler(req, res) {
-  const spotify = getSpotify();
   const token = req.cookies.access;
 
-  if (!token) return res.status(401).send("No logueado");
-  spotify.setAccessToken(token);
-
-  const backup = req.body;
-
   try {
+    const spotify = getSpotify();
+
+    if (!token) return res.status(401).send("No logueado");
+    spotify.setAccessToken(token);
+
+    const backup = req.body;
+
     for (let pl of backup.playlists) {
       const newPl = await spotify.createPlaylist(pl.name, {
         public: pl.public,

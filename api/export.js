@@ -1,20 +1,21 @@
 const { getSpotify } = require("./spotify");
 
 module.exports = async function handler(req, res) {
-  const spotify = getSpotify();
   const token = req.cookies.access;
 
-  if (!token) return res.status(401).send("No logueado");
-  spotify.setAccessToken(token);
-
-  const backup = {
-    playlists: [],
-    liked: [],
-    albums: [],
-    artists: [],
-  };
-
   try {
+    const spotify = getSpotify();
+
+    if (!token) return res.status(401).send("No logueado");
+    spotify.setAccessToken(token);
+
+    const backup = {
+      playlists: [],
+      liked: [],
+      albums: [],
+      artists: [],
+    };
+
     // playlists
     let pls = await spotify.getUserPlaylists({ limit: 50 });
     for (let pl of pls.body.items) {
