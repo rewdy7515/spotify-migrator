@@ -1,6 +1,6 @@
-import { getSpotify } from "./spotify.js";
+const { getSpotify } = require("./spotify");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const spotify = getSpotify();
 
   const scopes = [
@@ -16,4 +16,4 @@ export default async function handler(req, res) {
 
   const url = spotify.createAuthorizeURL(scopes);
   res.writeHead(302, { Location: url }).end();
-}
+};

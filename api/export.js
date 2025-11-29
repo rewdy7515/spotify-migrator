@@ -1,6 +1,6 @@
-import { getSpotify } from "./spotify.js";
+const { getSpotify } = require("./spotify");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const spotify = getSpotify();
   const token = req.cookies.access;
 
@@ -43,4 +43,4 @@ export default async function handler(req, res) {
     console.log(err);
     res.status(500).send("Error al exportar");
   }
-}
+};

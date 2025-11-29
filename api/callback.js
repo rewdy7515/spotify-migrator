@@ -1,6 +1,6 @@
-import { getSpotify } from "./spotify.js";
+const { getSpotify } = require("./spotify");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const code = req.query.code;
 
   const spotify = getSpotify();
@@ -18,4 +18,4 @@ export default async function handler(req, res) {
     console.log(err);
     res.status(500).send("Error autenticando con Spotify");
   }
-}
+};
