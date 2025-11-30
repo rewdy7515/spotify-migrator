@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
       "user-follow-modify",
     ];
 
-    const url = spotify.createAuthorizeURL(scopes);
+    const url = spotify.createAuthorizeURL(scopes, undefined, true); // showDialog=true fuerza pantalla de login
     res.writeHead(302, { Location: url }).end();
   } catch (err) {
     console.error(err);

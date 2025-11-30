@@ -1,30 +1,157 @@
-document.querySelector("#export").onclick = async () => {
-  const res = await fetch("/api/export");
-  const data = await res.json();
+const loginBtn = document.querySelector("#loginBtn");
+const exportBtn = document.querySelector("#exportBtn");
+const importBtn = document.querySelector("#importBtn");
+const downloadBtn = document.querySelector("#downloadBtn");
+const inputFile = document.querySelector("#inputFile");
+const statusEl = document.querySelector("#status");
+const app = document.querySelector("#app");
+const authRow = document.querySelector("#authRow");
+const logEl = document.querySelector("#log");
+const progressWrap = document.querySelector("#progressWrap");
+const progressEl = document.querySelector("#progress");
+const progressLabel = document.querySelector("#progressLabel");
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: "application/json",
-  });
+let isLogged = false;
+let backupBlob = null;
+let progressTimer = null;
 
+init();
+
+function init() {
+  loginBtn.onclick = () => {
+    loginBtn.disabled = true;
+    window.location.href = "/api/login";
+  };
+
+  exportBtn.onclick = handleExport;
+  importBtn.onclick = () => inputFile.click();
+  downloadBtn.onclick = downloadBackup;
+  inputFile.onchange = handleImport;
+
+  checkSession();
+}
+
+async function checkSession() {
+  try {
+    const res = await fetch("/api/session");
+    const data = await res.json();
+    setLogged(Boolean(data.logged));
+  } catch (err) {
+    console.error(err);
+    log("No se pudo verificar la sesión. Intenta recargar.");
+  }
+}
+
+function setLogged(state) {
+  isLogged = state;
+
+  if (isLogged) {
+    app.classList.remove("hidden");
+    authRow.classList.add("hidden");
+    statusEl.textContent = "Listo. Exporta o importa tus playlists.";
+  } else {
+    app.classList.add("hidden");
+    authRow.classList.remove("hidden");
+    statusEl.textContent = "Conecta tu cuenta de Spotify para continuar.";
+  }
+}
+
+async function handleExport() {
+  if (!isLogged) {
+    log("Primero inicia sesión con Spotify.");
+    return;
+  }
+
+  toggleExportState(true);
+  startProgress();
+
+  try {
+    const res = await fetch("/api/export");
+    if (!res.ok) {
+      throw new Error(await res.text());
+    }
+
+    const data = await res.json();
+    backupBlob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+
+    finishProgress();
+    downloadBtn.classList.remove("hidden");
+    log("Exportación completada. Descarga el archivo.");
+  } catch (err) {
+    stopProgress();
+    log(`Error al exportar: ${err.message}`);
+  } finally {
+    toggleExportState(false);
+  }
+}
+
+async function handleImport(e) {
+  if (!isLogged) {
+    log("Primero inicia sesión con Spotify.");
+    return;
+  }
+
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const json = JSON.parse(text);
+
+    const res = await fetch("/api/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(json),
+    });
+
+    log(await res.text());
+  } catch (err) {
+    log(`Error al importar: ${err.message}`);
+  } finally {
+    inputFile.value = "";
+  }
+}
+
+function downloadBackup() {
+  if (!backupBlob) return;
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
+  a.href = URL.createObjectURL(backupBlob);
   a.download = "spotify_backup.json";
   a.click();
-};
+}
 
-document.querySelector("#import").onclick = () => {
-  document.querySelector("#inputFile").click();
-};
+function log(message) {
+  logEl.textContent = message;
+}
 
-document.querySelector("#inputFile").onchange = async (e) => {
-  const text = await e.target.files[0].text();
-  const json = JSON.parse(text);
+function toggleExportState(isLoading) {
+  exportBtn.disabled = isLoading;
+  importBtn.disabled = isLoading;
+}
 
-  const res = await fetch("/api/import", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(json),
-  });
+function startProgress() {
+  progressEl.value = 0;
+  progressLabel.textContent = "0%";
+  progressWrap.classList.remove("hidden");
+  progressTimer = setInterval(() => {
+    const next = Math.min(progressEl.value + Math.random() * 12, 90);
+    progressEl.value = next;
+    progressLabel.textContent = `${Math.round(next)}%`;
+  }, 350);
+}
 
-  document.querySelector("#log").textContent = await res.text();
-};
+function finishProgress() {
+  stopProgress();
+  progressEl.value = 100;
+  progressLabel.textContent = "100%";
+}
+
+function stopProgress() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+  progressWrap.classList.add("hidden");
+}
