@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
       `refresh=${tokenData.body.refresh_token}; Path=/; HttpOnly; SameSite=Lax`,
     ]);
 
-    res.redirect("/");
+    res.redirect("/?authed=1");
   } catch (err) {
     console.log(err);
     res.status(500).send("Error autenticando con Spotify");

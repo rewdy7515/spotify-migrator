@@ -28,18 +28,7 @@ function init() {
   downloadBtn.onclick = downloadBackup;
   inputFile.onchange = handleImport;
 
-  checkSession();
-}
-
-async function checkSession() {
-  try {
-    const res = await fetch("/api/session");
-    const data = await res.json();
-    setLogged(Boolean(data.logged));
-  } catch (err) {
-    console.error(err);
-    log("No se pudo verificar la sesión. Intenta recargar.");
-  }
+  hydrateAuthState();
 }
 
 function setLogged(state) {
@@ -54,6 +43,26 @@ function setLogged(state) {
     authRow.classList.remove("hidden");
     statusEl.textContent = "Conecta tu cuenta de Spotify para continuar.";
   }
+}
+
+function hydrateAuthState() {
+  const params = new URLSearchParams(window.location.search);
+  const authedParam = params.get("authed");
+  const authedSession = sessionStorage.getItem("spotifyAuthed");
+
+  if (authedParam === "1") {
+    sessionStorage.setItem("spotifyAuthed", "1");
+    params.delete("authed");
+    const newUrl =
+      window.location.pathname +
+      (params.toString() ? `?${params.toString()}` : "") +
+      window.location.hash;
+    window.history.replaceState({}, "", newUrl);
+    setLogged(true);
+    return;
+  }
+
+  setLogged(authedSession === "1");
 }
 
 async function handleExport() {
