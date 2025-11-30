@@ -8,8 +8,8 @@ module.exports = async function handler(req, res) {
     const tokenData = await spotify.authorizationCodeGrant(code);
 
     res.setHeader("Set-Cookie", [
-      `access=${tokenData.body.access_token}; Path=/; HttpOnly`,
-      `refresh=${tokenData.body.refresh_token}; Path=/; HttpOnly`,
+      `access=${tokenData.body.access_token}; Path=/; HttpOnly; SameSite=Lax`,
+      `refresh=${tokenData.body.refresh_token}; Path=/; HttpOnly; SameSite=Lax`,
     ]);
 
     res.redirect("/");

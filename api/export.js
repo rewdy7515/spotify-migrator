@@ -1,9 +1,11 @@
 const { getSpotify } = require("./spotify");
+const { parseCookies } = require("./cookies");
 
 module.exports = async function handler(req, res) {
-  const token = req.cookies.access;
-
   try {
+    const cookies = parseCookies(req);
+    const token = cookies.access;
+
     const spotify = getSpotify();
 
     if (!token) return res.status(401).send("No logueado");
