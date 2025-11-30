@@ -8,6 +8,9 @@ const statusEl = document.querySelector("#status");
 const app = document.querySelector("#app");
 const authRow = document.querySelector("#authRow");
 const switchRow = document.querySelector("#switchRow");
+const userInfo = document.querySelector("#userInfo");
+const userNameEl = document.querySelector("#userName");
+const avatarEl = document.querySelector("#avatar");
 const logEl = document.querySelector("#log");
 const progressWrap = document.querySelector("#progressWrap");
 const progressEl = document.querySelector("#progress");
@@ -16,6 +19,16 @@ const progressLabel = document.querySelector("#progressLabel");
 let isLogged = false;
 let backupBlob = null;
 let progressTimer = null;
+let backupData = null;
+let selectionState = {
+  userName: false,
+  profileImage: false,
+  playlists: true,
+  liked: true,
+  albums: true,
+  artists: true,
+  podcasts: true,
+};
 
 init();
 
@@ -30,6 +43,7 @@ function init() {
   downloadBtn.onclick = downloadBackup;
   inputFile.onchange = handleImport;
   switchBtn.onclick = switchAccount;
+  initSelection();
 
   hydrateAuthState();
 }
@@ -41,13 +55,27 @@ function setLogged(state) {
     app.classList.remove("hidden");
     statusEl.textContent = "Listo. Exporta o importa tus playlists.";
     switchRow.classList.remove("hidden");
+    authRow.classList.add("hidden");
+    loadProfile();
   } else {
     app.classList.add("hidden");
     statusEl.textContent = "Conecta tu cuenta de Spotify para continuar.";
     downloadBtn.classList.add("hidden");
     switchRow.classList.add("hidden");
     backupBlob = null;
+    authRow.classList.remove("hidden");
+    userInfo.classList.add("hidden");
   }
+}
+
+function initSelection() {
+  document.querySelectorAll('#selection input[type="checkbox"]').forEach((chk) => {
+    const key = chk.dataset.key;
+    chk.checked = selectionState[key];
+    chk.onchange = () => {
+      selectionState[key] = chk.checked;
+    };
+  });
 }
 
 function hydrateAuthState() {
@@ -85,13 +113,14 @@ async function handleExport() {
       throw new Error(await res.text());
     }
 
-    const data = await res.json();
-    backupBlob = new Blob([JSON.stringify(data, null, 2)], {
+    backupData = await res.json();
+    backupBlob = new Blob([JSON.stringify(buildSelectedData(), null, 2)], {
       type: "application/json",
     });
 
     finishProgress();
     downloadBtn.classList.remove("hidden");
+    document.querySelector("#selection").classList.remove("hidden");
     log("Exportación completada. Descarga el archivo.");
   } catch (err) {
     stopProgress();
@@ -129,7 +158,15 @@ async function handleImport(e) {
 }
 
 function downloadBackup() {
-  if (!backupBlob) return;
+  if (!backupData) {
+    log("Primero exporta tus datos.");
+    return;
+  }
+
+  backupBlob = new Blob([JSON.stringify(buildSelectedData(), null, 2)], {
+    type: "application/json",
+  });
+
   const a = document.createElement("a");
   a.href = URL.createObjectURL(backupBlob);
   a.download = "spotify_backup.json";
@@ -173,5 +210,53 @@ function stopProgress() {
 
 function switchAccount() {
   sessionStorage.removeItem("spotifyAuthed");
+  userInfo.classList.add("hidden");
   window.location.href = "/api/login";
+}
+
+async function loadProfile() {
+  try {
+    const res = await fetch("/api/session");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.logged) return;
+
+    const { user } = data;
+    if (user?.name) userNameEl.textContent = user.name;
+    if (user?.image) {
+      avatarEl.src = user.image;
+      avatarEl.classList.remove("hidden");
+    } else {
+      avatarEl.classList.add("hidden");
+    }
+    userInfo.classList.remove("hidden");
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function buildSelectedData() {
+  if (!backupData) return {};
+
+  const selected = {};
+
+  if (selectionState.userName || selectionState.profileImage) {
+    selected.user = {};
+    if (selectionState.userName && backupData.user?.name) {
+      selected.user.name = backupData.user.name;
+    }
+    if (selectionState.profileImage && backupData.user?.image) {
+      selected.user.image = backupData.user.image;
+    }
+    // if nothing got added, drop user
+    if (Object.keys(selected.user).length === 0) delete selected.user;
+  }
+
+  if (selectionState.playlists) selected.playlists = backupData.playlists || [];
+  if (selectionState.liked) selected.liked = backupData.liked || [];
+  if (selectionState.albums) selected.albums = backupData.albums || [];
+  if (selectionState.artists) selected.artists = backupData.artists || [];
+  if (selectionState.podcasts) selected.podcasts = backupData.podcasts || [];
+
+  return selected;
 }

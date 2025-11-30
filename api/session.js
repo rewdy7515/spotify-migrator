@@ -12,9 +12,15 @@ module.exports = async function handler(req, res) {
     spotify.setAccessToken(token);
 
     // Verificar que el token sea válido
-    await spotify.getMe();
+    const me = await spotify.getMe();
 
-    return res.status(200).json({ logged: true });
+    const user = {
+      id: me.body?.id,
+      name: me.body?.display_name,
+      image: me.body?.images?.[0]?.url || null,
+    };
+
+    return res.status(200).json({ logged: true, user });
   } catch (err) {
     console.log(err);
     return res.status(200).json({ logged: false });

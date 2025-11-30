@@ -70,6 +70,24 @@
       .hidden {
         display: none;
       }
+      .user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 6px 0 14px;
+      }
+      .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #2a2a2a;
+        border: 1px solid #2a2a2a;
+      }
+      .user-name {
+        font-weight: 700;
+        font-size: 16px;
+      }
       .progress-wrap {
         background: #101010;
         border: 1px solid #2a2a2a;
@@ -103,6 +121,28 @@
         min-height: 60px;
         white-space: pre-wrap;
       }
+      .selection {
+        background: #101010;
+        border: 1px solid #2a2a2a;
+        border-radius: 10px;
+        padding: 12px;
+        margin: 12px 0;
+      }
+      .selection h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+      .selection label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 6px 0;
+        cursor: pointer;
+      }
+      .selection input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+      }
     </style>
   </head>
   <body>
@@ -112,6 +152,10 @@
 
       <div class="actions" id="authRow">
         <button id="loginBtn">Ingresar con Spotify</button>
+      </div>
+      <div id="userInfo" class="user hidden">
+        <img id="avatar" class="avatar" src="" alt="Avatar" />
+        <div class="user-name" id="userName"></div>
       </div>
       <div id="switchRow" class="hidden" style="margin: 2px 0 18px;">
         <button id="switchBtn" class="ghost">Iniciar sesión en otra cuenta</button>
@@ -124,6 +168,17 @@
           <button id="downloadBtn" class="secondary hidden">
             Descargar archivo
           </button>
+        </div>
+
+        <div id="selection" class="selection hidden">
+          <h3>Selecciona qué exportar</h3>
+          <label><input type="checkbox" data-key="userName" />Nombre de usuario</label>
+          <label><input type="checkbox" data-key="profileImage" />Foto de perfil</label>
+          <label><input type="checkbox" data-key="playlists" checked />Playlists</label>
+          <label><input type="checkbox" data-key="liked" checked />Me gustas</label>
+          <label><input type="checkbox" data-key="albums" checked />Álbumes guardados</label>
+          <label><input type="checkbox" data-key="artists" checked />Artistas seguidos</label>
+          <label><input type="checkbox" data-key="podcasts" checked />Podcasts</label>
         </div>
 
         <div id="progressWrap" class="progress-wrap hidden">
