@@ -255,9 +255,13 @@ function switchAccount() {
 async function loadProfile() {
   try {
     const res = await fetch("/api/session");
-    if (!res.ok) return;
+    if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    if (!data.logged) return;
+    if (!data.logged) {
+      sessionStorage.removeItem("spotifyAuthed");
+      setLogged(false);
+      return;
+    }
 
     const { user } = data;
     if (user?.name) userNameEl.textContent = user.name;
@@ -270,6 +274,8 @@ async function loadProfile() {
     userInfo.classList.remove("hidden");
   } catch (err) {
     console.error(err);
+    sessionStorage.removeItem("spotifyAuthed");
+    setLogged(false);
   }
 }
 
